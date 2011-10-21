@@ -1,4 +1,4 @@
-from bin.imapbackup.imapbackup import * 
+from bin.imapbackup.imapbackup import *
 
 def archive(username, password, data_dir):
     config = {

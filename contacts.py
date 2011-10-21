@@ -33,7 +33,7 @@ def archive(username, password, data_dir):
     pickle.dump(feed, file)
 
 
-    
+
     # I was tryin to make this work with the googlesharedcontacts library thing, but it was getting complicated.
     #export_csv_file_name = data_dir + 'contacts.csv'
     #export_csv_file = OpenOutputCsv(export_csv_file_name, 'export', 'Export')

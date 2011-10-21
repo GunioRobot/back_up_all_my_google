@@ -50,7 +50,7 @@ class SkipFolderException(Exception):
 
 class Spinner:
   """Prints out message with cute spinner, indicating progress"""
-  
+
   def __init__(self, message):
     """Spinner constructor"""
     self.glyphs = "|/-\\"
@@ -59,7 +59,7 @@ class Spinner:
     sys.stdout.write(message)
     sys.stdout.flush()
     self.spin()
-  
+
   def spin(self):
     """Rotate the spinner"""
     if sys.stdin.isatty():
@@ -99,7 +99,7 @@ UUID = '19AF1258-1AAF-44EF-9D9A-731079D6FAD7' # Used to generate Message-Ids
 
 def download_messages(server, filename, messages, config):
   """Download messages from folder and append to mailbox"""
-  
+
   if config['overwrite']:
     if os.path.exists(filename):
       print "Deleting", filename
@@ -123,15 +123,15 @@ def download_messages(server, filename, messages, config):
     print "New messages: 0"
     mbox.close()
     return
-  
+
   spinner = Spinner("Downloading %s new messages to %s" % (len(messages), filename))
   total = biggest = 0
-  
+
   # each new message
   for msg_id in messages.keys():
     # This "From" and the terminating newline below delimit messages
     # in mbox files
-    buf = "From nobody %s\n" % time.strftime('%a %m %d %H:%M:%S %Y') 
+    buf = "From nobody %s\n" % time.strftime('%a %m %d %H:%M:%S %Y')
     # If this is one of our synthesised Message-IDs, insert it before
     # the other headers
     if UUID in msg_id:
@@ -144,15 +144,15 @@ def download_messages(server, filename, messages, config):
     text = data[0][1].strip().replace('\r','')
     mbox.write(text)
     mbox.write('\n\n')
-    
+
     size = len(text)
     biggest = max(size, biggest)
     total += size
-    
+
     del data
     gc.collect()
     spinner.spin()
-  
+
   mbox.close()
   spinner.stop()
   print ": %s total, %s for largest message" % (pretty_byte_count(total),
@@ -195,7 +195,7 @@ def scan_file(filename, compress, overwrite):
       print
       print "WARNING: Message #%d in %s" % (i, filename),
       print "has no Message-Id header."
-    
+
     header = BLANKS_RE.sub(' ', header.strip())
     try:
       msg_id = MSGID_RE.match(header).group(1)
@@ -226,19 +226,19 @@ def scan_folder(server, foldername):
     if 'OK' != typ:
       raise SkipFolderException("SELECT failed: %s" % (data))
     num_msgs = int(data[0])
-    
+
     # each message
     for num in range(1, num_msgs+1):
       # Retrieve Message-Id
       typ, data = server.fetch(num, '(BODY[HEADER.FIELDS (MESSAGE-ID)])')
       if 'OK' != typ:
         raise SkipFolderException("FETCH %s failed: %s" % (num, data))
-      
+
       header = data[0][1].strip()
       # remove newlines inside Message-Id (a dumb Exchange trait)
       header = BLANKS_RE.sub(' ', header)
       try:
-        msg_id = MSGID_RE.match(header).group(1) 
+        msg_id = MSGID_RE.match(header).group(1)
         if msg_id not in messages.keys():
           # avoid adding dupes
           messages[msg_id] = num
@@ -255,7 +255,7 @@ def scan_folder(server, foldername):
   finally:
     spinner.stop()
     print ":",
-  
+
   # done
   print "%d messages" % (len(messages.keys()))
   return messages
@@ -290,7 +290,7 @@ def parse_paren_list(row):
   # eat ending paren
   assert(')' == row[0])
   row = row[1:]
-  
+
   # done!
   return result, row
 
@@ -324,16 +324,16 @@ def get_names(server, compress):
   """Get list of folders, returns [(FolderName,FileName)]"""
 
   spinner = Spinner("Finding Folders")
-  
+
   # Get hierarchy delimiter
   delim = get_hierarchy_delimiter(server)
   spinner.spin()
-  
+
   # Get LIST of all folders
   typ, data = server.list()
   assert(typ == 'OK')
   spinner.spin()
-  
+
   names = []
 
   # parse each LIST, find folder name
@@ -378,7 +378,7 @@ def process_cline():
     opts, extraargs = getopt.getopt(sys.argv[1:], short_args, long_args)
   except getopt.GetoptError:
     print_usage()
-  
+
   warnings = []
   config = {'compress':'none', 'overwrite':False, 'usessl':False}
   errors = []
@@ -386,7 +386,7 @@ def process_cline():
   # empty command line
   if not len(opts) and not len(extraargs):
     print_usage()
-  
+
   # process each command line option, save in config
   for option, value in opts:
     if option in ("-a", "--append-to-mboxes"):
@@ -423,7 +423,7 @@ def process_cline():
   # don't ignore extra arguments
   for arg in extraargs:
     errors.append("Unknown argument: " + arg)
-  
+
   # done processing command line
   return (config, warnings, errors)
 
@@ -460,7 +460,7 @@ def check_config(config, warnings, errors):
       except ValueError:
         errors.append("Invalid port.  Port must be an integer between 0 and 65535.")
   return (config, warnings, errors)
-  
+
 def get_config():
   """Gets config from command line and console, returns config"""
   # config = {
@@ -474,14 +474,14 @@ def get_config():
   #   'keyfilename': String or None
   #   'certfilename': String or None
   # }
-  
+
   config, warnings, errors = process_cline()
   config, warnings, errors = check_config(config, warnings, errors)
-  
+
   # show warnings
   for warning in warnings:
     print "WARNING:", warning
-  
+
   # show errors, exit
   for error in errors:
     print "ERROR", error
@@ -491,14 +491,14 @@ def get_config():
   # prompt for password, if necessary
   if 'pass' not in config:
     config['pass'] = getpass.getpass()
-  
+
   # defaults
   if not 'port' in config:
     if config['usessl']:
       config['port'] = 993
     else:
       config['port'] = 143
-  
+
   # done!
   return config
 
@@ -506,7 +506,7 @@ def connect_and_login(config):
   """Connects to the server and logs in.  Returns IMAP4 object."""
   try:
     assert(not (('keyfilename' in config) ^ ('certfilename' in config)))
-    
+
     if config['usessl'] and 'keyfilename' in config:
       print "Connecting to '%s' TCP port %d," % (config['server'], config['port']),
       print "SSL, key from %s," % (config['keyfilename']),
@@ -519,7 +519,7 @@ def connect_and_login(config):
     else:
       print "Connecting to '%s' TCP port %d" % (config['server'], config['port'])
       server = imaplib.IMAP4(config['server'], config['port'])
-    
+
     print "Logging in as '%s'" % (config['user'])
     server.login(config['user'], config['pass'])
   except socket.gaierror, e:
@@ -533,7 +533,7 @@ def connect_and_login(config):
       print "ERROR: error reading certificate chain file '%s'" % (config['keyfilename'])
     else:
       print "ERROR: could not connect to '%s' (%s)" % (config['server'], e)
-    
+
     sys.exit(4)
 
   return server
@@ -547,26 +547,26 @@ def main():
     names.reverse()
     #for n in range(len(names)):
     #  print n, names[n]
-    
+
     for name_pair in names:
       try:
         foldername, filename = name_pair
         fol_messages = scan_folder(server, foldername)
         fil_messages = scan_file(filename, config['compress'], config['overwrite'])
-        
+
         new_messages = {}
         for msg_id in fol_messages:
           if msg_id not in fil_messages:
             new_messages[msg_id] = fol_messages[msg_id]
-        
+
         #for f in new_messages:
         #  print "%s : %s" % (f, new_messages[f])
 
         download_messages(server, filename, new_messages, config)
-      
+
       except SkipFolderException, e:
         print e
-    
+
     print "Disconnecting"
     server.logout()
   except socket.error, e:
